@@ -4,6 +4,8 @@ const outputValue = document.getElementById("output-value");
 const fromUnit = document.getElementById("from-unit");
 const toUnit = document.getElementById("to-unit");
 const convertBtn = document.getElementById("convert-btn");
+const messageText = document.getElementById("message");
+const summaryText = document.getElementById("summary");
 
 const units = {
   length: {
@@ -26,6 +28,12 @@ const units = {
 };
 
 const temperatureUnits = ["celsius", "fahrenheit", "kelvin"];
+
+const absoluteZero = {
+  celsius: -273.15,
+  fahrenheit: -459.67,
+  kelvin: 0
+};
 
 function getUnitNames(category) {
   if (category === "temperature") {
@@ -50,7 +58,18 @@ function loadUnits() {
   });
 
   toUnit.selectedIndex = 1;
+  clearResult();
+}
+
+function clearResult() {
   outputValue.value = "";
+  summaryText.textContent = "";
+  messageText.textContent = "";
+}
+
+function showError(text) {
+  clearResult();
+  messageText.textContent = text;
 }
 
 function convertTemperature(value, from, to) {
@@ -72,11 +91,25 @@ function convertTemperature(value, from, to) {
   return celsius + 273.15;
 }
 
-function convert() {
-  const value = parseFloat(inputValue.value);
+function convert(isButtonClick) {
+  clearResult();
 
-  if (isNaN(value)) {
-    outputValue.value = "";
+  if (inputValue.validity.badInput) {
+    showError("Please enter a valid number.");
+    return;
+  }
+
+  const text = inputValue.value.trim();
+
+  if (text === "") {
+    if (isButtonClick) showError("Please enter a value.");
+    return;
+  }
+
+  const value = Number(text);
+
+  if (!Number.isFinite(value)) {
+    showError("Please enter a valid number.");
     return;
   }
 
@@ -86,19 +119,48 @@ function convert() {
   let result;
 
   if (category === "temperature") {
+    if (value < absoluteZero[from]) {
+      showError("Temperature cannot be below absolute zero.");
+      return;
+    }
     result = convertTemperature(value, from, to);
   } else {
+    if (value < 0) {
+      showError("Value cannot be negative for length or weight.");
+      return;
+    }
     result = value * units[category][from] / units[category][to];
   }
 
-  outputValue.value = parseFloat(result.toPrecision(10));
+  const rounded = parseFloat(result.toPrecision(10));
+
+  outputValue.value = rounded;
+  summaryText.textContent = value + " " + from + " = " + rounded + " " + to;
 }
 
-categorySelect.addEventListener("change", loadUnits);
-convertBtn.addEventListener("click", convert);
+categorySelect.addEventListener("change", function () {
+  loadUnits();
+  convert(false);
+});
+
+fromUnit.addEventListener("change", function () {
+  convert(false);
+});
+
+toUnit.addEventListener("change", function () {
+  convert(false);
+});
+
+inputValue.addEventListener("input", function () {
+  convert(false);
+});
 
 inputValue.addEventListener("keydown", function (event) {
-  if (event.key === "Enter") convert();
+  if (event.key === "Enter") convert(true);
+});
+
+convertBtn.addEventListener("click", function () {
+  convert(true);
 });
 
 loadUnits();

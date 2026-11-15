@@ -18,7 +18,7 @@
     </select>
 
     <div class="row">
-      <input type="number" id="input-value" placeholder="Enter value">
+      <input type="number" id="input-value" placeholder="Enter value" step="any">
       <select id="from-unit"></select>
     </div>
 
@@ -27,7 +27,11 @@
       <select id="to-unit"></select>
     </div>
 
+    <p id="message" class="message"></p>
+
     <button id="convert-btn">Convert</button>
+
+    <p id="summary" class="summary"></p>
   </main>
 
   <script src="script.js"></script>
